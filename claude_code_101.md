@@ -163,3 +163,157 @@ Mi aplicación necesita un modo oscuro implementado en toda la aplicación. ¿Pu
 ---
 
 > **Resumen:** Cuando uses Claude Code, intenta ser lo más descriptivo posible con tu prompt. Si quieres mantenerte al tanto en cada paso, puedes hacerlo. Usa el Modo Plan para dejar que Claude profundice en los detalles de lo que quieres lograr antes de ejecutar cualquier código.
+
+---
+
+## El flujo de trabajo: Explorar → Planificar → Codificar → Confirmar
+
+### Explorar y Planificar
+
+La forma más rápida de manejar estos primeros dos pasos es con el **Modo de Planificación**. En el modo de planificación, Claude no puede editar archivos; solo lee archivos para recopilar información sobre cómo abordará la implementación.
+
+Para entrar en el modo de planificación, presiona **Shift + Tab** hasta que veas "Plan Mode" debajo del campo de texto. Luego escribe una indicación como:
+
+> Barra de estado de Claude Code mostrando el modo de planificación activado con shift+tab para alternar
+
+```
+Necesito agregar conversión a WebP a nuestro pipeline de carga de imágenes. Averigua en qué parte del pipeline debería ocurrir, si necesitamos nuevas dependencias y cómo abordarlo.
+```
+
+Claude leerá los archivos relevantes, ejecutará algunas búsquedas web y te dará un plan de acción. Revísalo y decide si cumple con tus criterios. Si no, pídele que revise áreas específicas.
+
+> Claude Code presentando el plan con opciones para aprobar, revisar áreas o hacer preguntas
+
+Este es el mejor lugar para corregir el rumbo porque es antes de que se escriba cualquier código. También puedes ejecutar el subagente de exploración sin estar en el modo de planificación si solo quieres un resumen general de tu base de código sin intención de hacer cambios después.
+
+### Codificar
+
+Una vez que el plan se vea bien, selecciona "aprobar" para aceptarlo y dejar que Claude trabaje en la lista de elementos. Puedes elegir si Claude acepta automáticamente las ediciones de archivos o te pregunta cada vez.
+
+Claude hará todo lo posible para solucionar problemas antes de considerar el plan "terminado", pero a veces necesitarás intervenir. Este es el beneficio de trabajar con el Modo de Planificación: después de la ejecución, también tienes el contexto de cómo llegaste a los resultados, lo cual ayuda a guiar las próximas decisiones de Claude.
+
+**Algunos consejos para hacer más fluida la fase de codificación:**
+
+| Consejo | Descripción |
+|---------|-------------|
+| **Define un criterio de éxito** | Para que Claude tenga confianza en sus resultados, necesita tener claro cómo se ve "correcto". Haz esto explícito al escribir tu plan. |
+| **Agrega herramientas** | Las herramientas que ayudan a Claude a lograr sus objetivos eliminan mucho de ida y vuelta. Por ejemplo, si estás construyendo interfaces web, instala la extensión Claude in Chrome para que Claude Code pueda controlar una pestaña del navegador y probar la interfaz directamente. |
+| **Incluye un conjunto de pruebas** | Dale a Claude un conjunto de pruebas contra el cual pueda validar continuamente. Claude incluso puede escribir pruebas por ti. Antes de entregar esto, asegúrate de que las pruebas sean una fuente confiable de verdad para evitar falsos positivos. |
+
+> La página de la extensión Claude in Chrome en la Chrome Web Store
+
+> **Consejo rápido:** Si notas que Claude sigue encontrando los mismos problemas, pídele que guarde la solución en su archivo `CLAUDE.md`.
+
+### Confirmar
+
+Una vez que hayas probado los cambios tú mismo y estés satisfecho con los resultados, es momento de subir tu código. Antes de confirmar, ejecuta un subagente revisor de código para que revise tu trabajo. Un subagente aporta una mirada fresca a la base de código; no carga con el sesgo que el agente principal podría tener de la sesión.
+
+> Un subagente revisor de código ejecutándose en Claude Code, leyendo archivos y revisando cambios recientes
+
+Luego pídele a Claude que genere un mensaje de confirmación en tu estilo. Repite el proceso.
+
+---
+
+### Resumen
+
+Para ser efectivo con Claude Code, sigue el flujo de trabajo **Explorar, Planificar, Codificar y Confirmar**:
+
+| Fase | Descripción |
+|------|-------------|
+| **Explorar** | Le da a Claude el contexto relevante que necesita para tu proyecto. |
+| **Planificar** | Crea un plan de acción que Claude usa para medir el éxito. |
+| **Codificar** | Es el ir y venir entre tú y Claude antes de decidir el resultado final. |
+| **Confirmar** | Te ayuda a revisar y subir tu código para que puedas comenzar con tu próxima función. |
+
+---
+
+## Gestión del contexto
+
+### ¿Qué es la ventana de contexto?
+
+Piensa en la ventana de contexto como la cantidad de espacio que Claude puede retener en su memoria. Cada vez que ingresas un prompt, Claude lee un archivo, ejecuta una llamada a una herramienta o recibe el resultado de una llamada a una herramienta, todo eso se va agregando a la ventana de contexto. Dado que hay una cantidad finita de espacio, se vuelve importante optimizar cómo lo usas.
+
+> Diagrama que muestra la ventana de contexto como una cuadrícula de tokens — algunos ocupados, la mayoría disponibles
+
+### Qué sucede cuando el contexto se llena
+
+Cuando te acercas al límite, la ventana de contexto se compacta automáticamente. La compactación resume los detalles importantes y elimina los resultados de llamadas a herramientas innecesarios para liberar espacio. Ten en cuenta que este proceso puede potencialmente perder detalles.
+
+> Claude Code mostrando 'Compactando conversación...' mientras resume el contexto
+
+> Claude Code mostrando un resumen compacto de la conversación anterior, incluyendo conceptos técnicos clave y archivos
+
+### Comandos
+
+Puedes ejecutar la compactación manualmente con el comando `/compact`. Esto compacta todo hasta ese punto. Es útil cuando quieres liberar espacio de contexto mientras mantienes un recuerdo de lo que trabajaste previamente.
+
+> El comando /compact en el menú de autocompletado de Claude Code
+
+Si quieres comenzar completamente desde cero sin memoria de la sesión anterior, ejecuta `/clear`. Esto elimina todo.
+
+> Ejecutando /clear en Claude Code para comenzar una sesión nueva
+
+Para verificar el estado de tu contexto, ejecuta el comando `/context`. Obtendrás una visión general de alto nivel del tamaño de tu contexto, las categorías que ocupan más espacio, y un gráfico visual que muestra el desglose.
+
+> Salida del comando /context mostrando el desglose del uso de contexto con un gráfico de barras visual
+
+### Cuándo usar cuál
+
+**Una regla general:**
+
+| Comando | Cuándo usarlo |
+|---------|---------------|
+| `/compact` | Cuando estés trabajando en una función específica y te estés acercando al límite de contexto pero necesites continuar. Mantener el contexto relevante a tu función actual es importante. |
+| `/clear` | Cuando quieras comenzar una nueva función. No quieres que la conversación anterior introduzca sesgo en algo nuevo. |
+
+> Para las cosas que quieres que Claude recuerde entre sesiones, colócalas en tu archivo `CLAUDE.md` para que no tenga que redescubrirlas desde cero.
+
+> Un archivo CLAUDE.md con comandos, notas importantes y secciones de arquitectura
+
+### Consejos para ahorrar espacio de contexto
+
+**Sé específico.** Un prompt vago puede parecer más pequeño, pero en realidad cuesta más contexto a largo plazo. Sin instrucciones claras, Claude se ve forzado a explorar más tu base de código y hacer su propio razonamiento — lo cual ocupa mucho más espacio de contexto que un prompt detallado.
+
+**Gestiona tus servidores MCP.** Los servidores MCP cargan todas sus herramientas disponibles en el contexto por defecto, incluso cuando no las estás usando. Si tienes servidores configurados para cosas no relacionadas con el proyecto actual, considera desactivarlos. También puedes probar las "Skills", que funcionan de manera similar a los servidores MCP pero no cargan todo en el contexto de antemano.
+
+**Usa subagentes.** Los subagentes se ejecutan en paralelo con tu agente principal pero tienen una ventana de contexto completamente separada. Para tareas en las que solo necesitas la respuesta — como "¿dónde están ubicados los endpoints de autenticación?" — un subagente hace el trabajo y devuelve solo un resumen a tu agente principal, manteniendo limpio tu contexto principal.
+
+---
+
+> **Resumen:** Gestionar el contexto dentro de Claude Code es crucial. Usa `/compact` para resumir sesiones largas y `/clear` para comenzar de nuevo. Para usar tu ventana de contexto de manera efectiva: sé específico con tus prompts, verifica qué está consumiendo tu contexto actual, y usa subagentes para delegar tareas donde solo necesitas el resultado.
+
+---
+
+## Revisión de código
+
+### Revisar con un Subagente
+
+Antes de enviar un PR, pídele a Claude que use un subagente para revisar tus cambios. El subagente se ejecuta en su propia ventana de contexto con una mirada fresca: no carga con el sesgo del agente principal que acaba de pasar la sesión escribiendo el código.
+
+Al crear un subagente revisor de código, restríngelo a herramientas de solo lectura. Un revisor debe señalar problemas, no editar archivos. Registra la configuración del subagente en tu repositorio para que todo tu equipo use el mismo revisor.
+
+### La Skill /commit-push-pr
+
+La skill `/commit-push-pr` gestiona el commit, el push y la creación del PR todo en un solo paso. En lugar de hacer cada cosa manualmente, simplemente ejecuta la skill y Claude se encarga de ello.
+
+Si tienes un servidor MCP de Slack configurado con canales listados en tu `CLAUDE.md`, publicará automáticamente el enlace del PR en el canal de tu equipo.
+
+### Vinculación de sesiones con --from-pr
+
+Cuando Claude crea un PR mediante `gh pr create`, la sesión se vincula automáticamente a ese PR. Si necesitas volver a ella más tarde —quizás para abordar comentarios de revisión o corregir una compilación fallida— ejecuta:
+
+```bash
+claude --from-pr <PR_NUMBER>
+```
+
+Esto retoma justo donde lo dejaste.
+
+---
+
+### Resumen
+
+- Usa un subagente para obtener una revisión de código imparcial antes de hacer push.
+- Usa `/commit-push-pr` para gestionar todo el flujo de commit a PR en un solo paso.
+- Usa `--from-pr` para reanudar el trabajo en un PR más tarde.
+
+Son funciones pequeñas, pero eliminan mucha fricción de tu flujo de trabajo diario.
